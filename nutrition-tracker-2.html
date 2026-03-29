@@ -1,0 +1,749 @@
+<!DOCTYPE html>
+<html lang="bg">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>НутриСкан — Хранителни стойности</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #0a0f0d;
+    --surface: #111a14;
+    --surface2: #192219;
+    --border: #1e2e22;
+    --accent: #4eff8c;
+    --accent2: #a8ff6e;
+    --accent-dim: rgba(78,255,140,0.12);
+    --accent-glow: rgba(78,255,140,0.35);
+    --text: #e8f0ea;
+    --text-dim: #7a9980;
+    --text-faint: #3d5440;
+    --protein: #4eff8c;
+    --carbs: #ffe566;
+    --fat: #ff8f4e;
+    --cal: #e8f0ea;
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 400;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* BG texture */
+  body::before {
+    content: '';
+    position: fixed; inset: 0;
+    background:
+      radial-gradient(ellipse 60% 40% at 20% 10%, rgba(78,255,140,0.06) 0%, transparent 60%),
+      radial-gradient(ellipse 40% 60% at 80% 80%, rgba(168,255,110,0.04) 0%, transparent 60%);
+    pointer-events: none; z-index: 0;
+  }
+
+  .container {
+    max-width: 780px;
+    margin: 0 auto;
+    padding: 0 20px 60px;
+    position: relative; z-index: 1;
+  }
+
+  /* HEADER */
+  header {
+    padding: 48px 0 40px;
+    display: flex; align-items: flex-end; justify-content: space-between;
+  }
+  .logo {
+    display: flex; flex-direction: column; gap: 2px;
+  }
+  .logo-tag {
+    font-size: 10px; letter-spacing: 3px; text-transform: uppercase;
+    color: var(--accent); font-weight: 600; font-family: 'DM Sans', sans-serif;
+  }
+  .logo-name {
+    font-family: 'Syne', sans-serif;
+    font-size: 38px; font-weight: 800;
+    line-height: 1;
+    background: linear-gradient(135deg, #fff 30%, var(--accent2));
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .logo-sub {
+    font-size: 12px; color: var(--text-dim); margin-top: 4px;
+  }
+  .header-badge {
+    display: flex; align-items: center; gap: 6px;
+    background: var(--accent-dim);
+    border: 1px solid rgba(78,255,140,0.2);
+    border-radius: 20px; padding: 6px 14px;
+    font-size: 11px; color: var(--accent); font-weight: 500; letter-spacing: 0.5px;
+  }
+  .badge-dot { width:6px; height:6px; border-radius:50%; background:var(--accent); animation: pulse 2s infinite; }
+  @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.5;transform:scale(0.8)} }
+
+  /* TABS */
+  .tabs {
+    display: flex; gap: 4px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px; padding: 4px; margin-bottom: 28px;
+  }
+  .tab {
+    flex: 1; padding: 11px; border-radius: 10px;
+    font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 500;
+    cursor: pointer; border: none; background: transparent;
+    color: var(--text-dim); transition: all 0.2s; letter-spacing: 0.3px;
+  }
+  .tab.active {
+    background: var(--accent); color: #0a0f0d; font-weight: 700;
+  }
+  .tab:not(.active):hover { color: var(--text); background: var(--surface2); }
+
+  /* PANELS */
+  .panel { display: none; }
+  .panel.active { display: block; animation: fadeIn 0.3s ease; }
+  @keyframes fadeIn { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
+
+  /* SEARCH BAR */
+  .search-wrap {
+    position: relative; margin-bottom: 20px;
+  }
+  .search-input {
+    width: 100%;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 18px 130px 18px 20px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 15px; color: var(--text);
+    outline: none; transition: border-color 0.2s, box-shadow 0.2s;
+  }
+  .search-input::placeholder { color: var(--text-faint); }
+  .search-input:focus {
+    border-color: rgba(78,255,140,0.4);
+    box-shadow: 0 0 0 3px rgba(78,255,140,0.07);
+  }
+  .search-btn {
+    position: absolute; right: 6px; top: 50%; transform: translateY(-50%);
+    background: var(--accent); color: #0a0f0d;
+    border: none; border-radius: 10px;
+    padding: 10px 20px; font-family: 'Syne', sans-serif;
+    font-size: 13px; font-weight: 700; cursor: pointer;
+    transition: all 0.2s; white-space: nowrap;
+  }
+  .search-btn:hover { background: var(--accent2); transform: translateY(-50%) scale(1.02); }
+  .search-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: translateY(-50%); }
+
+  /* GRAM SELECTOR */
+  .gram-row {
+    display: flex; align-items: center; gap: 12px; margin-bottom: 20px;
+  }
+  .gram-label { font-size: 13px; color: var(--text-dim); white-space: nowrap; }
+  .gram-input {
+    width: 90px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px; padding: 10px 14px;
+    font-family: 'DM Sans', sans-serif; font-size: 14px; color: var(--text);
+    outline: none; transition: border-color 0.2s;
+  }
+  .gram-input:focus { border-color: rgba(78,255,140,0.4); }
+  .gram-unit { font-size: 13px; color: var(--text-dim); }
+
+  /* RESULT CARD */
+  .result-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 18px; padding: 28px;
+    margin-top: 24px;
+    animation: slideUp 0.35s cubic-bezier(0.16,1,0.3,1);
+  }
+  @keyframes slideUp { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:translateY(0)} }
+
+  .result-header {
+    display: flex; justify-content: space-between; align-items: flex-start;
+    margin-bottom: 24px;
+  }
+  .result-name {
+    font-family: 'Syne', sans-serif;
+    font-size: 22px; font-weight: 700;
+    line-height: 1.2;
+  }
+  .result-amount {
+    font-size: 12px; color: var(--text-dim); margin-top: 4px;
+  }
+  .cal-badge {
+    background: var(--accent-dim);
+    border: 1px solid rgba(78,255,140,0.25);
+    border-radius: 12px; padding: 10px 16px; text-align: center;
+    min-width: 90px;
+  }
+  .cal-num {
+    font-family: 'Syne', sans-serif; font-size: 26px; font-weight: 800;
+    color: var(--accent); line-height: 1;
+  }
+  .cal-unit { font-size: 10px; color: var(--text-dim); letter-spacing: 1px; margin-top: 2px; }
+
+  /* MACRO BARS */
+  .macros { display: flex; flex-direction: column; gap: 14px; margin-bottom: 22px; }
+  .macro-row { display: flex; flex-direction: column; gap: 5px; }
+  .macro-top { display: flex; justify-content: space-between; align-items: baseline; }
+  .macro-name { font-size: 12px; font-weight: 500; letter-spacing: 0.5px; text-transform: uppercase; }
+  .macro-val { font-family: 'Syne', sans-serif; font-size: 16px; font-weight: 700; }
+  .macro-bar-bg {
+    height: 6px; background: rgba(255,255,255,0.06); border-radius: 3px; overflow: hidden;
+  }
+  .macro-bar-fill {
+    height: 100%; border-radius: 3px;
+    transition: width 0.8s cubic-bezier(0.16,1,0.3,1);
+  }
+  .macro-protein .macro-name, .macro-protein .macro-val { color: var(--protein); }
+  .macro-protein .macro-bar-fill { background: var(--protein); }
+  .macro-carbs .macro-name, .macro-carbs .macro-val { color: var(--carbs); }
+  .macro-carbs .macro-bar-fill { background: var(--carbs); }
+  .macro-fat .macro-name, .macro-fat .macro-val { color: var(--fat); }
+  .macro-fat .macro-bar-fill { background: var(--fat); }
+
+  /* DATA SOURCE NOTE */
+  .source-note {
+    font-size: 11px; color: var(--text-faint); border-top: 1px solid var(--border);
+    padding-top: 14px; line-height: 1.5;
+  }
+  .source-note span { color: var(--text-dim); }
+
+  /* DISH BUILDER */
+  .section-label {
+    font-size: 11px; letter-spacing: 2px; text-transform: uppercase;
+    color: var(--text-dim); font-weight: 600; margin-bottom: 12px;
+  }
+
+  .ingredient-row {
+    display: flex; gap: 8px; margin-bottom: 8px; align-items: center;
+  }
+  .ing-name {
+    flex: 1;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 10px; padding: 11px 14px;
+    font-family: 'DM Sans', sans-serif; font-size: 14px; color: var(--text);
+    outline: none; transition: border-color 0.2s;
+  }
+  .ing-name::placeholder { color: var(--text-faint); }
+  .ing-name:focus { border-color: rgba(78,255,140,0.4); }
+  .ing-gram {
+    width: 80px;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 10px; padding: 11px 12px;
+    font-family: 'DM Sans', sans-serif; font-size: 14px; color: var(--text);
+    outline: none; transition: border-color 0.2s; text-align: center;
+  }
+  .ing-gram:focus { border-color: rgba(78,255,140,0.4); }
+  .ing-gram::placeholder { color: var(--text-faint); }
+  .ing-remove {
+    width: 36px; height: 36px; border-radius: 8px;
+    background: transparent; border: 1px solid var(--border);
+    color: var(--text-faint); font-size: 16px; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.2s; flex-shrink: 0;
+  }
+  .ing-remove:hover { background: rgba(255,80,80,0.1); border-color: rgba(255,80,80,0.3); color: #ff6b6b; }
+
+  .add-ing-btn {
+    width: 100%; padding: 12px;
+    background: transparent; border: 1px dashed var(--border);
+    border-radius: 10px; color: var(--text-dim);
+    font-family: 'DM Sans', sans-serif; font-size: 13px; cursor: pointer;
+    transition: all 0.2s; margin-bottom: 20px;
+  }
+  .add-ing-btn:hover { border-color: rgba(78,255,140,0.3); color: var(--accent); background: var(--accent-dim); }
+
+  .dish-name-input {
+    width: 100%;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 12px; padding: 14px 16px;
+    font-family: 'Syne', sans-serif; font-size: 15px; font-weight: 600; color: var(--text);
+    outline: none; margin-bottom: 16px; transition: border-color 0.2s;
+  }
+  .dish-name-input::placeholder { color: var(--text-faint); font-weight: 400; font-family: 'DM Sans', sans-serif; }
+  .dish-name-input:focus { border-color: rgba(78,255,140,0.4); }
+
+  .calc-btn {
+    width: 100%; padding: 16px;
+    background: var(--accent); color: #0a0f0d;
+    border: none; border-radius: 12px;
+    font-family: 'Syne', sans-serif; font-size: 15px; font-weight: 700;
+    cursor: pointer; transition: all 0.2s; letter-spacing: 0.3px;
+  }
+  .calc-btn:hover { background: var(--accent2); transform: translateY(-1px); box-shadow: 0 8px 24px rgba(78,255,140,0.2); }
+  .calc-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; box-shadow: none; }
+
+  /* DISH RESULT */
+  .dish-result {
+    margin-top: 24px;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 18px; padding: 28px;
+    animation: slideUp 0.35s cubic-bezier(0.16,1,0.3,1);
+  }
+  .dish-title {
+    font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 800;
+    margin-bottom: 6px;
+  }
+  .dish-subtitle { font-size: 12px; color: var(--text-dim); margin-bottom: 22px; }
+
+  .dish-total-row {
+    display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px;
+    margin-bottom: 24px;
+  }
+  .dish-macro-box {
+    background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 12px; padding: 14px 12px; text-align: center;
+  }
+  .dish-macro-val {
+    font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 800;
+    line-height: 1; margin-bottom: 4px;
+  }
+  .dish-macro-label {
+    font-size: 10px; letter-spacing: 1px; text-transform: uppercase;
+    color: var(--text-dim); font-weight: 500;
+  }
+  .box-cal .dish-macro-val { color: var(--cal); }
+  .box-protein .dish-macro-val { color: var(--protein); }
+  .box-carbs .dish-macro-val { color: var(--carbs); }
+  .box-fat .dish-macro-val { color: var(--fat); }
+
+  /* INGREDIENT BREAKDOWN TABLE */
+  .breakdown-title {
+    font-size: 11px; letter-spacing: 2px; text-transform: uppercase;
+    color: var(--text-dim); margin-bottom: 12px;
+  }
+  .breakdown-table { width: 100%; border-collapse: collapse; }
+  .breakdown-table th {
+    font-size: 10px; letter-spacing: 1px; text-transform: uppercase;
+    color: var(--text-faint); text-align: right; padding-bottom: 8px;
+    font-weight: 500;
+  }
+  .breakdown-table th:first-child { text-align: left; }
+  .breakdown-table td {
+    padding: 8px 0; border-top: 1px solid var(--border);
+    font-size: 13px; text-align: right; color: var(--text-dim);
+  }
+  .breakdown-table td:first-child { text-align: left; color: var(--text); font-weight: 500; }
+  .breakdown-table tr:last-child td {
+    border-top: 2px solid rgba(78,255,140,0.2);
+    color: var(--text); font-weight: 600;
+  }
+
+  /* LOADING */
+  .loader {
+    display: flex; flex-direction: column; align-items: center;
+    gap: 14px; padding: 40px; color: var(--text-dim); font-size: 14px;
+  }
+  .spinner {
+    width: 36px; height: 36px;
+    border: 2px solid var(--border);
+    border-top-color: var(--accent);
+    border-radius: 50%; animation: spin 0.8s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ERROR */
+  .error-msg {
+    background: rgba(255, 80, 80, 0.07);
+    border: 1px solid rgba(255, 80, 80, 0.2);
+    border-radius: 12px; padding: 16px 20px;
+    color: #ff8080; font-size: 13px; line-height: 1.5;
+    margin-top: 16px;
+  }
+
+  /* HINT */
+  .hint {
+    font-size: 12px; color: var(--text-faint); margin-top: 8px; line-height: 1.5;
+  }
+
+  /* RESPONSIVE */
+  @media (max-width: 520px) {
+    .logo-name { font-size: 28px; }
+    header { flex-direction: column; gap: 16px; align-items: flex-start; }
+    .dish-total-row { grid-template-columns: repeat(2, 1fr); }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <header>
+    <div class="logo">
+      <span class="logo-tag">AI-powered</span>
+      <div class="logo-name">НутриСкан</div>
+      <div class="logo-sub">Точни хранителни стойности за всяка храна</div>
+    </div>
+    <div class="header-badge">
+      <div class="badge-dot"></div>
+      Реални данни
+    </div>
+  </header>
+
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab('search')">🔍 Търси продукт</button>
+    <button class="tab" onclick="switchTab('dish')">🍽️ Изчисли ястие</button>
+  </div>
+
+  <!-- SEARCH PANEL -->
+  <div id="panel-search" class="panel active">
+    <div class="section-label">Продукт или съставка</div>
+    <div class="search-wrap">
+      <input type="text" class="search-input" id="searchInput"
+        placeholder="напр. пилешко гърди, кисело мляко 2%, ориз..."
+        onkeydown="if(event.key==='Enter') doSearch()">
+      <button class="search-btn" id="searchBtn" onclick="doSearch()">Търси</button>
+    </div>
+    <div class="gram-row">
+      <span class="gram-label">Количество:</span>
+      <input type="number" class="gram-input" id="searchGrams" value="100" min="1" max="5000">
+      <span class="gram-unit">грама</span>
+    </div>
+    <div class="hint">Въведи продукта на български или английски — дава точни макрос по стандартни хранителни бази (USDA/EFSA).</div>
+    <div id="searchResult"></div>
+  </div>
+
+  <!-- DISH PANEL -->
+  <div id="panel-dish" class="panel">
+    <div class="section-label">Ястие</div>
+    <div style="display:flex;gap:8px;margin-bottom:16px">
+      <input type="text" class="dish-name-input" id="dishName" placeholder="напр. Мусака, Шопска салата, Боб чорба..." style="margin-bottom:0;flex:1" onkeydown="if(event.key==='Enter') autoLoadIngredients()">
+      <button class="search-btn" id="autoBtn" onclick="autoLoadIngredients()" style="position:static;transform:none;white-space:nowrap;border-radius:12px;padding:0 18px">🪄 Зареди</button>
+    </div>
+    <div class="hint" style="margin-bottom:16px">Напиши ястие и натисни <strong style="color:var(--accent)">Зареди</strong> — AI ще предложи типичните съставки с количества. После можеш да редактираш.</div>
+
+    <div class="section-label">Съставки</div>
+    <div id="ingredientsList"></div>
+    <button class="add-ing-btn" onclick="addIngredient()">+ Добави съставка</button>
+
+    <button class="calc-btn" id="calcBtn" onclick="calcDish()">⚡ Изчисли хранителни стойности</button>
+    <div id="dishResult"></div>
+  </div>
+
+</div>
+
+<script>
+const API_URL = "https://api.anthropic.com/v1/messages";
+
+// ─── TAB SWITCH ───────────────────────────────────
+function switchTab(name) {
+  document.querySelectorAll('.tab').forEach((t,i) => {
+    t.classList.toggle('active', (i===0 && name==='search') || (i===1 && name==='dish'));
+  });
+  document.getElementById('panel-search').classList.toggle('active', name==='search');
+  document.getElementById('panel-dish').classList.toggle('active', name==='dish');
+}
+
+// ─── SEARCH ──────────────────────────────────────
+async function doSearch() {
+  const query = document.getElementById('searchInput').value.trim();
+  const grams = parseInt(document.getElementById('searchGrams').value) || 100;
+  if (!query) return;
+
+  const btn = document.getElementById('searchBtn');
+  btn.disabled = true; btn.textContent = '...';
+  document.getElementById('searchResult').innerHTML = `
+    <div class="loader"><div class="spinner"></div>Анализирам хранителния профил...</div>`;
+
+  const prompt = `Дай точните хранителни стойности за "${query}", количество: ${grams} грама.
+Използвай данни от USDA FoodData Central или EFSA/научни хранителни бази.
+Отговори САМО с JSON, без никакъв текст преди или след него:
+{
+  "name": "...",
+  "name_en": "...",
+  "grams": ${grams},
+  "calories": 0,
+  "protein": 0.0,
+  "carbs": 0.0,
+  "fat": 0.0,
+  "fiber": 0.0,
+  "sugar": 0.0,
+  "saturated_fat": 0.0,
+  "source_note": "кратка бележка откъде са данните"
+}
+Всички числа трябва да са за ${grams}г. Само числа, без 'г' или единици в стойностите.`;
+
+  try {
+    const res = await fetch(API_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: "claude-sonnet-4-20250514",
+        max_tokens: 1000,
+        messages: [{ role: "user", content: prompt }]
+      })
+    });
+    const data = await res.json();
+    const text = data.content[0].text.replace(/```json|```/g,'').trim();
+    const d = JSON.parse(text);
+    renderSearchResult(d);
+  } catch(e) {
+    document.getElementById('searchResult').innerHTML =
+      `<div class="error-msg">⚠️ Грешка при извличане на данните. Провери връзката и опитай отново.</div>`;
+  }
+  btn.disabled = false; btn.textContent = 'Търси';
+}
+
+function renderSearchResult(d) {
+  const maxMacro = Math.max(d.protein, d.carbs, d.fat, 1);
+  document.getElementById('searchResult').innerHTML = `
+    <div class="result-card">
+      <div class="result-header">
+        <div>
+          <div class="result-name">${d.name}</div>
+          ${d.name_en ? `<div style="font-size:12px;color:var(--text-faint);margin-top:2px">${d.name_en}</div>` : ''}
+          <div class="result-amount">${d.grams} грама</div>
+        </div>
+        <div class="cal-badge">
+          <div class="cal-num">${Math.round(d.calories)}</div>
+          <div class="cal-unit">ККАЛ</div>
+        </div>
+      </div>
+      <div class="macros">
+        ${macroBar('Протеини','macro-protein', d.protein, maxMacro, 'г')}
+        ${macroBar('Въглехидрати','macro-carbs', d.carbs, maxMacro, 'г')}
+        ${macroBar('Мазнини','macro-fat', d.fat, maxMacro, 'г')}
+      </div>
+      ${(d.fiber || d.sugar || d.saturated_fat) ? `
+      <div style="display:flex;gap:16px;flex-wrap:wrap;margin-bottom:16px">
+        ${d.fiber ? miniStat('Фибри', d.fiber+'г') : ''}
+        ${d.sugar ? miniStat('Захар', d.sugar+'г') : ''}
+        ${d.saturated_fat ? miniStat('Нас. мазнини', d.saturated_fat+'г') : ''}
+      </div>` : ''}
+      <div class="source-note">📊 <span>${d.source_note || 'USDA FoodData Central / EFSA хранителни данни'}</span></div>
+    </div>`;
+}
+
+function macroBar(label, cls, val, max, unit) {
+  const pct = Math.min((val/max)*100, 100);
+  return `<div class="macro-row ${cls}">
+    <div class="macro-top">
+      <span class="macro-name">${label}</span>
+      <span class="macro-val">${(+val).toFixed(1)}${unit}</span>
+    </div>
+    <div class="macro-bar-bg">
+      <div class="macro-bar-fill" style="width:${pct}%"></div>
+    </div>
+  </div>`;
+}
+
+function miniStat(label, val) {
+  return `<div style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:8px 12px;text-align:center">
+    <div style="font-size:13px;font-weight:600;color:var(--text)">${val}</div>
+    <div style="font-size:10px;color:var(--text-faint);text-transform:uppercase;letter-spacing:1px;margin-top:2px">${label}</div>
+  </div>`;
+}
+
+// ─── DISH BUILDER ─────────────────────────────────
+let ingredientCount = 0;
+
+async function autoLoadIngredients() {
+  const dishName = document.getElementById('dishName').value.trim();
+  if (!dishName) return;
+
+  const btn = document.getElementById('autoBtn');
+  btn.disabled = true; btn.textContent = '⏳...';
+
+  document.getElementById('ingredientsList').innerHTML = '';
+  ingredientCount = 0;
+  document.getElementById('dishResult').innerHTML = '';
+
+  const list = document.getElementById('ingredientsList');
+  list.innerHTML = `<div class="loader" style="padding:20px"><div class="spinner"></div>Зареждам типичните съставки...</div>`;
+
+  const prompt = `Дай типичните съставки за традиционното ястие "${dishName}" с реалистични количества в грамове за 1 порция.
+Отговори САМО с JSON без никакъв текст преди или след:
+{
+  "dish": "...",
+  "ingredients": [
+    { "name": "...", "grams": 0 }
+  ]
+}
+Съставките да са на български. Количествата да са реалистични за 1 порция. Максимум 12 съставки.`;
+
+  try {
+    const res = await fetch(API_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: "claude-sonnet-4-20250514",
+        max_tokens: 800,
+        messages: [{ role: "user", content: prompt }]
+      })
+    });
+    const data = await res.json();
+    const text = data.content[0].text.replace(/```json|```/g,'').trim();
+    const d = JSON.parse(text);
+
+    list.innerHTML = '';
+    if (d.dish) document.getElementById('dishName').value = d.dish;
+    d.ingredients.forEach(i => addIngredient(i.name, i.grams));
+
+    const hint = document.createElement('div');
+    hint.style.cssText = 'font-size:12px;color:var(--accent);margin:8px 0 12px;padding:8px 12px;background:var(--accent-dim);border-radius:8px;border:1px solid rgba(78,255,140,0.2)';
+    hint.textContent = `✓ Заредени ${d.ingredients.length} съставки — редактирай по желание, после натисни Изчисли`;
+    list.after(hint);
+    setTimeout(() => hint.remove(), 6000);
+
+  } catch(e) {
+    list.innerHTML = '';
+    list.insertAdjacentHTML('afterend', `<div class="error-msg" style="margin-bottom:12px">⚠️ Грешка при зареждане. Провери връзката и опитай отново.</div>`);
+    addIngredient('', ''); addIngredient('', ''); addIngredient('', '');
+  }
+  btn.disabled = false; btn.textContent = '🪄 Зареди';
+}
+
+function addIngredient(name='', grams='') {
+  const list = document.getElementById('ingredientsList');
+  const id = ++ingredientCount;
+  const div = document.createElement('div');
+  div.className = 'ingredient-row';
+  div.id = `ing-${id}`;
+  div.innerHTML = `
+    <input type="text" class="ing-name" placeholder="напр. краставица, маслини..." value="${name}">
+    <input type="number" class="ing-gram" placeholder="г" min="1" max="5000" value="${grams}">
+    <button class="ing-remove" onclick="removeIng(${id})" title="Премахни">×</button>`;
+  list.appendChild(div);
+}
+
+function removeIng(id) {
+  const el = document.getElementById(`ing-${id}`);
+  if (el) el.remove();
+}
+
+async function calcDish() {
+  const dishName = document.getElementById('dishName').value.trim() || 'Ястие';
+  const rows = document.querySelectorAll('.ingredient-row');
+  const ingredients = [];
+  rows.forEach(row => {
+    const name = row.querySelector('.ing-name').value.trim();
+    const grams = parseFloat(row.querySelector('.ing-gram').value) || 0;
+    if (name && grams > 0) ingredients.push({ name, grams });
+  });
+
+  if (ingredients.length === 0) {
+    document.getElementById('dishResult').innerHTML =
+      `<div class="error-msg">⚠️ Добави поне една съставка с количество.</div>`;
+    return;
+  }
+
+  const btn = document.getElementById('calcBtn');
+  btn.disabled = true; btn.textContent = '⏳ Изчислявам...';
+  document.getElementById('dishResult').innerHTML =
+    `<div class="loader"><div class="spinner"></div>Анализирам всяка съставка...</div>`;
+
+  const ingList = ingredients.map(i => `- ${i.name}: ${i.grams}г`).join('\n');
+
+  const prompt = `Изчисли точните хранителни стойности за ястие "${dishName}" с тези съставки:
+${ingList}
+
+Използвай USDA FoodData Central или EFSA данни за всяка съставка.
+Отговори САМО с JSON без никакъв допълнителен текст:
+{
+  "dish": "${dishName}",
+  "total_grams": 0,
+  "total_calories": 0,
+  "total_protein": 0.0,
+  "total_carbs": 0.0,
+  "total_fat": 0.0,
+  "ingredients": [
+    { "name": "...", "grams": 0, "calories": 0, "protein": 0.0, "carbs": 0.0, "fat": 0.0 }
+  ]
+}
+Само числа без единици в стойностите. Числата трябва да са реалистични.`;
+
+  try {
+    const res = await fetch(API_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: "claude-sonnet-4-20250514",
+        max_tokens: 2000,
+        messages: [{ role: "user", content: prompt }]
+      })
+    });
+    const data = await res.json();
+    const text = data.content[0].text.replace(/```json|```/g,'').trim();
+    const d = JSON.parse(text);
+    renderDishResult(d);
+  } catch(e) {
+    document.getElementById('dishResult').innerHTML =
+      `<div class="error-msg">⚠️ Грешка при изчислението. Провери съставките и опитай отново.</div>`;
+  }
+  btn.disabled = false; btn.textContent = '⚡ Изчисли хранителни стойности';
+}
+
+function renderDishResult(d) {
+  const rows = d.ingredients.map(i => `
+    <tr>
+      <td>${i.name}</td>
+      <td>${i.grams}г</td>
+      <td>${Math.round(i.calories)}</td>
+      <td>${(+i.protein).toFixed(1)}</td>
+      <td>${(+i.carbs).toFixed(1)}</td>
+      <td>${(+i.fat).toFixed(1)}</td>
+    </tr>`).join('');
+
+  document.getElementById('dishResult').innerHTML = `
+    <div class="dish-result">
+      <div class="dish-title">${d.dish}</div>
+      <div class="dish-subtitle">Общо ${d.total_grams}г · ${d.ingredients.length} съставки</div>
+
+      <div class="dish-total-row">
+        <div class="dish-macro-box box-cal">
+          <div class="dish-macro-val">${Math.round(d.total_calories)}</div>
+          <div class="dish-macro-label">Калории</div>
+        </div>
+        <div class="dish-macro-box box-protein">
+          <div class="dish-macro-val">${(+d.total_protein).toFixed(1)}г</div>
+          <div class="dish-macro-label">Протеини</div>
+        </div>
+        <div class="dish-macro-box box-carbs">
+          <div class="dish-macro-val">${(+d.total_carbs).toFixed(1)}г</div>
+          <div class="dish-macro-label">Въглехидрати</div>
+        </div>
+        <div class="dish-macro-box box-fat">
+          <div class="dish-macro-val">${(+d.total_fat).toFixed(1)}г</div>
+          <div class="dish-macro-label">Мазнини</div>
+        </div>
+      </div>
+
+      <div class="breakdown-title">Разбивка по съставки</div>
+      <table class="breakdown-table">
+        <thead>
+          <tr>
+            <th>Съставка</th>
+            <th>Количество</th>
+            <th>Ккал</th>
+            <th>Проt</th>
+            <th>Въгл</th>
+            <th>Маз</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${rows}
+          <tr>
+            <td>ОБЩО</td>
+            <td>${d.total_grams}г</td>
+            <td>${Math.round(d.total_calories)}</td>
+            <td>${(+d.total_protein).toFixed(1)}</td>
+            <td>${(+d.total_carbs).toFixed(1)}</td>
+            <td>${(+d.total_fat).toFixed(1)}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>`;
+}
+
+// ─── INIT ─────────────────────────────────────────
+addIngredient('', '');
+addIngredient('', '');
+</script>
+</body>
+</html>
